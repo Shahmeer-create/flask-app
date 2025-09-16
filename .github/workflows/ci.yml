@@ -27,14 +27,11 @@ jobs:
         run: |
           python -m unittest || true
 
+      # Updated SonarCloud Scan step
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        with:
-          projectBaseDir: .
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_PROJECT_KEY: flask-app
-          SONAR_ORGANIZATION: shahmeer-create
 
   deploy:
     runs-on: ubuntu-latest
