@@ -64,7 +64,7 @@ jobs:
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
         with:
-          name: zap-report
+          name: zap1
           path: report_html.html
           retention-days: 7
 
