@@ -31,7 +31,6 @@ jobs:
         run: |
           python -m unittest || true
 
-      # SonarCloud SAST Scan
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5.0.0
         env:
@@ -51,28 +50,24 @@ jobs:
           docker run -d -p 5000:5000 --name flask-app flask-app
           sleep 10
 
-      # Run ZAP but prevent it from uploading its own artifact
       - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.13.0
         with:
           target: 'http://localhost:5000'
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'
-          allow_issue_writing: true   # keeps GitHub issues
-          persist: false              # 🚫 stops auto artifact upload
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # ✅ Upload artifacts manually
+      # ✅ Manual artifact upload with valid name
       - name: Upload ZAP Reports
         uses: actions/upload-artifact@v4
         with:
-          name: zap-reports
+          name: zap-reports   # ✅ safe name (no underscores, lowercase)
           path: |
             report_html.html
             report_md.md
             report_json.json
-
 
   deploy:
     runs-on: ubuntu-latest
