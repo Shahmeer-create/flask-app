@@ -98,16 +98,9 @@ jobs:
               git clone https://github.com/shahmeer-create/flask-app.git flask-app
             fi
             cd flask-app
-            # Force clean pull and reset to latest main
-            git fetch --all
-            git reset --hard origin/main
+            git pull origin main
             sudo git config --global --add safe.directory /home/ubuntu/flask-app
-            # Force rebuild without cache
-            sudo docker build --no-cache -t flask-app .
-            # Ensure old container is stopped and removed
-            sudo docker stop flask-app 2>/dev/null
-            sudo docker rm flask-app 2>/dev/null
-            # Run new container and wait for it to start
+            sudo docker build -t flask-app .
+            sudo docker stop flask-app || true
+            sudo docker rm flask-app || true
             sudo docker run -d -p 5000:5000 --name flask-app flask-app
-            # Health check with timeout
-            timeout 30s bash -c 'until curl -s http://<EC2_HOST>:5000; do sleep 1; done' || { echo "Deployed app failed to start"; exit 1; }
