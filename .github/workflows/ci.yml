@@ -50,21 +50,22 @@ jobs:
           docker run -d -p 5000:5000 --name flask-app flask-app
           sleep 10
 
-      # ✅ Fixed ZAP step with volume mount
       - name: OWASP ZAP Baseline Scan
         run: |
-          docker run --name zapscan --rm --network=host \
+          # Run ZAP scan without auto-remove
+          docker run --name zapscan --network=host \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py -t http://localhost:5000 -a \
             -J /zap/wrk/report_json.json \
             -w /zap/wrk/report_md.md \
             -r /zap/wrk/report_html.html || true
 
+          # Copy reports from container to host
           docker cp zapscan:/zap/wrk ./zap-reports
 
+          # Clean up container
+          docker rm zapscan || true
 
-
-      # ✅ Upload the generated reports
       - name: Upload ZAP Reports
         uses: actions/upload-artifact@v4
         with:
