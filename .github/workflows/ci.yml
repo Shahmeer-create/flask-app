@@ -53,7 +53,7 @@ jobs:
           sleep 10  # wait for app to start
 
       - name: OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.11.0
+        uses: zaproxy/action-baseline@v0.13.0   # ✅ Updated version
         with:
           target: 'http://localhost:5000'
           rules_file_name: '.zap/rules.tsv'
@@ -62,7 +62,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload ZAP Reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4        # ✅ Updated version
         with:
           name: zap-reports
           path: |
