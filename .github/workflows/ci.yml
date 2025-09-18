@@ -54,17 +54,18 @@ jobs:
         run: |
           # Create reports and working directory
           mkdir -p zap-reports zap-wrk
+          chmod -R 777 zap-wrk  # Backup permission fix
           
-          # Run ZAP scan with mounted working directory and ignore warnings
-          docker run --network=host \
-            -v $(pwd)/zap-wrk:/zap/wrk \
+          # Run ZAP scan with mounted working directory, root user, ignore warnings, and disable automation framework
+          docker run --user root --network=host \
+            -v $(pwd)/zap-wrk:/zap/wrk/:rw \
             ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py -t http://localhost:5000 -a -I \
+            zap-baseline.py -t http://localhost:5000 -a -I --autooff \
             -J /zap/wrk/report_json.json \
             -w /zap/wrk/report_md.md \
             -r /zap/wrk/report_html.html || true
           
-          # Copy reports from local directory
+          # Copy reports from local directory (fallbacks ensure no failure)
           mv zap-wrk/report_json.json ./report_json.json 2>/dev/null || echo "[]" > ./report_json.json
           mv zap-wrk/report_md.md ./report_md.md 2>/dev/null || echo "# ZAP Report" > ./report_md.md
           mv zap-wrk/report_html.html ./report_html.html 2>/dev/null || echo "<html><body>ZAP Report</body></html>" > ./report_html.html
