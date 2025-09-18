@@ -1,4 +1,4 @@
-name: CI with SAST and DAST and Deploy
+name: CI with SAST, DAST, and Deploy
 
 on:
   push:
@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -42,32 +42,31 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
+      # Start your Flask app in Docker
       - name: Run Flask app
         run: |
           docker build -t flask-app .
           docker run -d -p 5000:5000 --name flask-app flask-app
-          sleep 10
+          sleep 15
 
-      - name: OWASP ZAP Baseline Scan
-        run: |
-          mkdir -p zap-reports
+      # OWASP ZAP Baseline Scan using official Action
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: "http://localhost:5000"
+          cmd_options: "-a"
+          allow_issue_writing: false
 
-          docker run --rm --network=host \
-            -v $(pwd)/zap-reports:/zap/wrk \
-            ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py -t http://localhost:5000 -a \
-            -J /zap/wrk/report_json.json \
-            -w /zap/wrk/report_md.md \
-            -r /zap/wrk/report_html.html || true
-
-      - name: Upload ZAP Reports
+      # Upload the generated ZAP report
+      - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
         with:
-          name: zap-reports
-          path: zap-reports/
-
+          name: zap-report
+          path: report_html.html
+          retention-days: 7
 
   deploy:
     runs-on: ubuntu-latest
@@ -75,7 +74,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
